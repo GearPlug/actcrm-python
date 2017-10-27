@@ -44,6 +44,13 @@ Delete an specific contact
 client.delete_contact(contact_id)
 ```
 
+
+You can do the same with opportunities
+```
+client.create_opportunity()
+```
+
+
 Get Metadata
 ```
 client.get_metadata()
