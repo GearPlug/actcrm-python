@@ -2,11 +2,7 @@ from requests.auth import HTTPBasicAuth
 import json
 import requests
 
-API_KEY = ""
-DEVELOPER_KEY = ""
 BASE_URL = "https://mycloud.act.com/act/api"
-
-WebhookEvents = ['oportunities_post', 'contacts_post', ]
 
 
 class Client(object):
