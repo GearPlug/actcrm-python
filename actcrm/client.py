@@ -1,17 +1,12 @@
-import requests
 from requests.auth import HTTPBasicAuth
 import json
-from pprint import pprint
+import requests
 
-API_KEY = "1vS-WEV1xhc27unvN60dcpGg0Tsjb00uF5XFpnN59Cs"
-DEVELOPER_KEY = "62228d9fcd9ae7b8b3b0f74d12cbb583"
-BASE_URL = "https://mycloud.act.com/act/api/"
+API_KEY = ""
+DEVELOPER_KEY = ""
+BASE_URL = "https://mycloud.act.com/act/api"
 
-
-# $top = MAX_LIMIT
-# $filter = VAR eq 'String'
-# $orderby = 'created'  (optional) desc
-# $select = field list
+WebhookEvents = ['oportunities_post', 'contacts_post', ]
 
 
 class Client(object):
@@ -22,6 +17,9 @@ class Client(object):
 
     def _get(self, endpoint, data=None, **kwargs):
         return self._request('GET', endpoint, data=data, **kwargs)
+
+    def _delete(self, endpoint, data=None, **kwargs):
+        return self._request('DELETE', endpoint, data=data, **kwargs)
 
     def _post(self, endpoint, data=None, **kwargs):
         return self._request('POST', endpoint, data=data, **kwargs)
@@ -41,32 +39,54 @@ class Client(object):
         return self._parse(response)
 
     def _parse(self, response):
-        if response.status_code == 400:
+        if response.status_code == 204:
+            return True
+        elif response.status_code == 400:
             raise Exception("The URL {0} retrieved an {1} error. Please check your request body and try again.\nRaw "
                             "message: {2}".format(response.url, response.status_code, response.text))
-        if response.status_code == 401:
+        elif response.status_code == 401:
             raise Exception("The URL {0} retrieved and {1} error. Please check your credentials, "
                             "make sure you have permission to perform this action andtry again.".format(
                 response.url, response.status_code))
         elif response.status_code == 404:
             raise Exception("The URL {0} retrieved an {1} error. Please check the URL and try again.\nRaw message: {"
                             "2}".format(response.url, response.status_code, response.text))
-        print("RESPONSE: \n", response.status_code)
-        pprint(response.json())
-
         return response.json()
 
     def get_contacts(self, **kwargs):
         return self._get('Contacts', **kwargs)
 
     def get_contact(self, id):
-        return self._get('Contacts/{}'.format(id))
+        return self._get('Contacts/{0}'.format(id))
 
-    def get_oportunities(self, **kwargs):
+    def create_contact(self, firstName='Default Name', **kwargs):
+        """
+          Aditional data:
+            lastName, company, jobTitle, emailAddress, altEmailAddress,
+             businessPhone, mobilePhone, homePhone, website, linkedinUrl, birthday
+        :return:
+        """
+        kwargs.update({'firstName': firstName})
+        return self._post('Contacts', data=kwargs, headers={'Content-Type': 'application/json'})
+
+    def get_opportunities(self, **kwargs):
         return self._get('Opportunities', **kwargs)
 
-    def get_oportunity(self, id):
+    def get_opportunity(self, id):
         return self._get('Opportunities/{}'.format(id))
+
+    def get_opportunity_stages(self):
+        return self._get('OpportunityStages')
+
+    def create_opportunity(self, title='Default Title', stage='Leads', **kwargs):
+        """
+        title, stage,* description, total, currency, notes, estimatedClose, estimatedClose,actualClose, customField1
+
+        contacts??
+        :return:
+        """
+        kwargs.update({'title': title, 'stage': stage})
+        return self._post('Opportunities', data=kwargs, headers={'Content-Type': 'application/json'})
 
     def get_metadata(self, type=None, only_visible=False):
         """
@@ -83,29 +103,23 @@ class Client(object):
             kwargs['filter'] = query_prefix + 'show eq true'
         return self._get('Metadata', **kwargs)
 
-    def create_contact(self, **kwargs):
+    def delete_contact(self, id):
+        return self._delete('Contacts/{0}'.format(id))
+
+    def delete_opportunity(self, id):
+        return self._delete('Opportunities/{0}'.format(id))
+
+    def get_webhooks(self):
+        return self._get('Webhooks')
+
+    def create_webhook(self, url, event):
+        return self._post('Webhooks', data={'target_url': url, 'event': event},
+                          headers={'Content-Type': 'application/json'})
+
+    def delete_webhook(self, id):
         """
-          firstName,* lastName, company, jobTitle, emailAddress, altEmailAddress, businessPhone, mobilePhone, homePhone,
-          website, linkedinUrl, birthday
+        No se como obtener el id del webhook. Otra forma de borrarlo es devolviendo status 410 (gone) en el response.
+        :param id:
         :return:
         """
-        return self._post('Contacts', data=kwargs, headers={'Content-Type': 'application/json'})
-
-    def create_opportunity(self, **kwargs):
-        """
-        title, stage,* description, total, currency, notes, estimatedClose, estimatedClose,actualClose, customField1
-
-        contacts??
-        :return:
-        """
-        return self._post('Opportunities', data=kwargs, headers={'Content-Type': 'application/json'})
-
-
-c = Client(API_KEY, DEVELOPER_KEY)
-# c.get_contacts(top=1, order_by='created desc')
-# c.get_contact("59f0c4aba5028e06703de9df")
-# c.get_oportunities()
-# c.get_oportunity('59f0c3604cee7a0bf4d0eeae')
-# c.get_metadata(only_visible=True)
-# c.create_contact(firstName="mAICOL", lastName="Carloss")
-c.create_opportunity(title="El oportuno express", stage="Leads")
+        return self._delete('Webhooks/{0}'.format(id))
