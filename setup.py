@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='typeform',
+setup(name='actcrm-python',
       version='0.1',
       description='API wrapper for Act! CRM written in Python',
       url='https://github.com/GearPlug/actcrm-python',
