@@ -6,7 +6,7 @@ Batchbook API wrapper written in python.
 
 ## Installing
 ```
-pip install git+github.com/GearPlug/actcrm-python.git
+pip install actcrm-python
 ```
 
 ## Usage
